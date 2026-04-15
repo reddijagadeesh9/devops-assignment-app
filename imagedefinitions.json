@@ -1,0 +1,6 @@
+[
+  {
+    "name": "app-container",
+    "imageUri": "181684851025.dkr.ecr.eu-north-1.amazonaws.com/devops-app:latest"
+  }
+]
