@@ -1,172 +1,200 @@
-#  DevOps Assignment - Case 1
+#  Case 1: Serverless Dockerized Application (AWS)
 
-## Serverless Containerized Application Deployment on AWS
+##  Overview
 
----
-
-##  Project Overview
-
-This project demonstrates the deployment of a containerized Node.js application using AWS DevOps services.
-The application is deployed using ECS Fargate, exposed via Application Load Balancer, and accelerated using CloudFront CDN.
-A complete CI/CD pipeline is implemented using GitHub, AWS CodePipeline, and CodeBuild.
+This project demonstrates deployment of a secure, scalable containerized application using AWS serverless services. The application is built using Node.js and deployed using ECS Fargate with a complete CI/CD pipeline.
 
 ---
 
 ##  Architecture
 
 ```
-User
- ↓
-CloudFront (CDN + HTTPS)
- ↓
+User → CloudFront (CDN + HTTPS)
+        ↓
 Application Load Balancer (ALB)
- ↓
-ECS Fargate (Containers)
- ↓
-ECR (Docker Images)
-
-GitHub → CodePipeline → CodeBuild → ECR → ECS
+        ↓
+ECS Fargate (Private Subnets)
+        ↓
+Docker Container (Node.js App)
+        ↓
+Amazon ECR (Image Registry)
 ```
 
 ---
 
 ##  Technologies Used
 
-* Node.js
-* Docker
-* AWS ECS Fargate
-* AWS ECR
+* AWS ECS Fargate (Serverless Containers)
+* AWS ECR (Container Registry)
+* AWS CodePipeline & CodeBuild (CI/CD)
 * AWS Application Load Balancer
 * AWS CloudFront (CDN + HTTPS)
-* AWS CodePipeline
-* AWS CodeBuild
-* GitHub
+* Amazon VPC (Private Networking)
+* Node.js (Express Application)
+* Docker
 
 ---
 
 ##  Application Features
 
-* Health Check Endpoint (`/health`)
-* Login API (`/login`)
-* Protected Items API (`/items`)
-* JWT Authentication implemented
+* `/health` → Health check endpoint (used by ALB)
+* `/login` → Returns authentication token (mock login)
+* `/items` → Protected endpoint (requires token)
+
+###  Authentication Flow
+
+1. User sends request to `/login`
+2. Server validates credentials (mock)
+3. JWT/Bearer token is generated
+4. Token is used to access `/items`
 
 ---
 
-##  Implementation Steps
+##  CI/CD Pipeline
 
-### 1. Application Development
+CI/CD is implemented using AWS services:
 
-* Created Node.js application with required endpoints
-* Implemented JWT authentication
+1. Code pushed to GitHub
+2. CodePipeline triggers automatically
+3. CodeBuild:
 
-### 2. Dockerization
+   * Builds Docker image
+   * Tags image
+   * Pushes to ECR
+4. ECS Service:
 
-* Created Dockerfile
-* Built Docker image
-
-### 3. ECR Setup
-
-* Created repository in AWS ECR
-* Pushed Docker image
-
-### 4. ECS Deployment
-
-* Created ECS cluster (Fargate)
-* Created task definition
-* Created service with load balancer
-
-### 5. Load Balancer Setup
-
-* Configured ALB with target group
-* Health check configured (`/health`)
-
-### 6. CI/CD Pipeline
-
-* Integrated GitHub repository
-* Created CodeBuild project using `buildspec.yml`
-* Created CodePipeline:
-
-  * Source → GitHub
-  * Build → CodeBuild
-  * Deploy → ECS
-
-### 7. CDN Setup
-
-* Created CloudFront distribution
-* Origin set to ALB
-* Enabled HTTPS via CloudFront
+   * Pulls latest image
+   * Deploys new version automatically
 
 ---
 
-##  Application URLs
+##  Security Implementation
 
-### CloudFront URL (Primary)
+The following security best practices are implemented:
 
-```
-https://d331xesaqyfin5.cloudfront.net
-```
+### 1. Network Isolation
 
-### Health Check
+* ECS tasks run inside **private subnets**
+* No direct public access to containers
 
-```
-https://d331xesaqyfin5.cloudfront.net/health
-```
+### 2. TLS/HTTPS
+
+* CloudFront provides HTTPS access
+* Ensures encrypted communication
+
+### 3. Security Groups
+
+* ALB allows inbound traffic (HTTP/HTTPS)
+* ECS allows traffic only from ALB
+
+### 4. DDoS Protection
+
+* AWS Shield (default) enabled
+* CloudFront provides additional protection
+
+### 5. Controlled Access
+
+* Application endpoints protected using token-based authentication
+
+---
+
+##  CDN Integration
+
+* CloudFront is configured in front of ALB
+* Improves performance using caching
+* Separates cached and dynamic requests
+
+---
+
+##  Proof of Implementation
+
+The following screenshots are included in the `proofs/` folder:
+
+* ECS Cluster & Service (Running)
+* Task status (Healthy)
+* Load Balancer configuration
+* Target Group health checks
+* CodePipeline execution success
+* CodeBuild logs
+* ECR repository & image
+* CloudFront distribution
+* Application output (`/health`, `/login`, `/items`)
+
+---
+
+##  Setup Instructions
+
+1. Clone repository
+2. Build Docker image:
+
+   ```bash
+   docker build -t devops-app .
+   ```
+3. Push image to ECR
+4. Deploy using ECS Fargate
+5. Configure ALB and target group
+6. Attach CloudFront distribution
+7. Access application via CloudFront URL
 
 ---
 
 ##  Testing
 
-### Health Endpoint
+### Health Check
 
 ```
-GET /health → OK
+GET /health
+Response: OK
 ```
 
-### Login API
+### Login
 
 ```
 POST /login
-Body:
-{
-  "username": "admin",
-  "password": "password"
-}
+Returns: Token
 ```
 
-### Items API
+### Protected Endpoint
 
 ```
 GET /items
-Authorization: Bearer <token>
+Header: Authorization: Bearer <token>
 ```
 
 ---
 
-## Security Features
+##  Cost Considerations
 
-* HTTPS enabled via CloudFront
-* Secure access using Security Groups
-* JWT-based authentication for APIs
-* Backend services protected behind ALB
+* ECS Fargate: Pay per usage
+* ALB: Hourly cost
+* CloudFront: Based on data transfer
+* ECR: Storage cost
 
----
+Cost can be optimized by:
 
-##  Note
-
-```
-Root endpoint (/) returns "Cannot GET /" as no route is defined.
-This is expected behavior.
-```
+* Using smaller task sizes
+* Auto scaling
+* Deleting unused resources
 
 ---
 
-##  Result
+##  Limitations
 
-* Successfully deployed a scalable containerized application
-* Implemented automated CI/CD pipeline
-* Enabled secure and fast delivery using CDN
-* Achieved production-level DevOps architecture
+* Authentication is mock-based (not production-ready)
+* ALB is publicly accessible (can be improved with WAF/IAM auth)
+* No rate limiting implemented
+
+---
+
+##  Conclusion
+
+This implementation demonstrates:
+
+* Containerization using Docker
+* Serverless deployment using ECS Fargate
+* Automated CI/CD pipeline
+* Secure networking and HTTPS
+* CDN integration for performance
 
 ---
 
@@ -174,5 +202,3 @@ This is expected behavior.
 
 REDDI JAGADEESWARA RAO
 📞 9618505622
-
----
