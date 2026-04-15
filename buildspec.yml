@@ -9,10 +9,10 @@ phases:
   build:
     commands:
       - echo Building Docker image
-      - docker build -t app .
-      - docker tag app:latest 181684851025.dkr.ecr.eu-north-1.amazonaws.com/app:latest
+      - docker build -t devops-app .
+      - docker tag devops-app:latest 181684851025.dkr.ecr.eu-north-1.amazonaws.com/devops-app:latest
 
   post_build:
     commands:
       - echo Pushing image
-      - docker push 181684851025.dkr.ecr.eu-north-1.amazonaws.com/app:latest
+      - docker push 181684851025.dkr.ecr.eu-north-1.amazonaws.com/devops-app:latest
